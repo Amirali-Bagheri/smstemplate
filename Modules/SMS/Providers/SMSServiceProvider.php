@@ -10,6 +10,9 @@ class SMSServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadRoutes();
+
+        $this->loadModuleMigrations();
+
     }
 
     protected function loadRoutes()
@@ -21,6 +24,19 @@ class SMSServiceProvider extends ServiceProvider
             ->group(base_path('Modules/SMS/Routes/api.php'));
 //            ->group('../Routes/api.php');
     }
+
+    /**
+     * Load module migrations.
+     *
+     * @return void
+     */
+    protected function loadModuleMigrations()
+    {
+        $modulePath = base_path('Modules/SMS/Database/Migrations');
+
+        $this->loadMigrationsFrom($modulePath);
+    }
+
     public function register()
     {
 

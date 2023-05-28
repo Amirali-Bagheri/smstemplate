@@ -1,0 +1,80 @@
+version: '3.4'
+
+services:
+
+  laravel:
+    container_name: smstemplate_laravel
+    restart: unless-stopped
+    dns:
+        - 178.22.122.100
+        - 185.51.200.2
+    build:
+      context: .
+      target: fpm_server
+    command: php-fpm
+    tty: true
+    expose:
+      - "9000"
+    volumes:
+      - '.:/var/www/smstemplate'
+    networks:
+      - smstemplate_network
+
+  web:
+    image: nginx:alpine
+    container_name: smstemplate_webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/smstemplate
+      - ./docker/nginx/conf.d/app.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/ssl/:/etc/nginx/ssl/
+    environment:
+      - VIRTUAL_PORT=80
+      - FPM_HOST=fpm:9000
+    networks:
+      - smstemplate_network
+
+  mariadb:
+    container_name: smstemplate_mariadb
+    image: mariadb:latest
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+    restart: unless-stopped
+    volumes:
+      - smstemplate_mariadb:/var/lib/mysql
+    networks:
+      - smstemplate_network
+
+  phpmyadmin:
+    image: 'phpmyadmin:latest'
+    container_name: smstemplate_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - '4000:80'
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+      UPLOAD_LIMIT: 3000M
+      MAX_EXECUTION_TIME: 6000
+    links:
+      - "mariadb:db"
+    depends_on:
+      - mariadb
+    networks:
+      - smstemplate_network
+
+volumes:
+  smstemplate_mariadb:
+    driver: local
+
+networks:
+  smstemplate_network:
+    driver: bridge

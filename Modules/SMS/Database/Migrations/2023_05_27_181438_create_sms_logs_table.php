@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->text('text');
             $table->unsignedBigInteger('sms_template_id')->nullable();
-            $table->json('numbers');
-
+            $table->string('number');
             $table->foreign('sms_template_id')->references('id')->on('sms_templates')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
